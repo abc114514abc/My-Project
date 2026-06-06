@@ -1,4 +1,6 @@
+//链式调用直接引入express，创建express身上的router实例
 const router = require('express').Router();
+
 const authController = require('../controllers/auth.controller');
 const auth = require('../middleware/auth');
 

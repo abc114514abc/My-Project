@@ -1,10 +1,13 @@
+//导入包
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
+//导入其他文件数据
 const User = require('../models/user.model');
 const { success, fail } = require('../utils/response');
 
 const SALT_ROUNDS = 10;
-
+//核心逻辑，两个函数
 const authController = {
   // 注册
   async register(req, res, next) {
@@ -33,7 +36,6 @@ const authController = {
       const userId = await User.create(username, passwordHash);
 
       // 签发 token
-      console.log('--- 此时此刻我的 JWT_SECRET 是：', process.env.JWT_SECRET);
       const token = jwt.sign(
         { id: userId, username },
         process.env.JWT_SECRET,

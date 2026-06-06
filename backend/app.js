@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+
 const authRoutes = require('./src/routes/auth.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 
@@ -9,6 +10,8 @@ const PORT = process.env.PORT || 3000;
 
 // 中间件
 app.use(cors());
+
+//全局中间件,看报文头把字符串数据转换成json数据
 app.use(express.json());
 
 // 路由
