@@ -77,7 +77,7 @@ async function handleRegister() {
   loading.value = true;
   try {
     await store.register(form.username, form.password);
-    router.push('/dashboard');
+    router.push('/questions');
   } catch (err) {
     errorMsg.value = err.message;
   } finally {

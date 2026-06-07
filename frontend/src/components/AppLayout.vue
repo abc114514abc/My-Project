@@ -2,7 +2,7 @@
   <div class="layout">
     <header class="header">
       <div class="header-inner">
-        <h1 class="logo" @click="$router.push('/dashboard')">📚 面试知识库</h1>
+        <h1 class="logo" @click="$router.push('/questions')">📚 面试知识库</h1>
         <div class="header-right">
           <span class="username">{{ store.username }}</span>
           <button class="btn-logout" @click="handleLogout">退出</button>

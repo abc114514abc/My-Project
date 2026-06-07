@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+/* import { createRouter, createWebHistory } from 'vue-router';
 
 // 定义页面路由；登录/注册设为访客页，仪表盘需要登录权限。
 const routes = [
@@ -50,5 +50,66 @@ router.beforeEach((to) => {
   return true;
 });
 
-export default router;
+export default router; */
 
+import { createRouter, createWebHistory } from 'vue-router';
+
+const routes = [
+  // ── 公开路由 ──
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/Login.vue'),
+    meta: { guest: true },
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/Register.vue'),
+    meta: { guest: true },
+  },
+
+  // ── 需登录路由 ──
+  {
+    path: '/',
+    redirect: '/questions',
+  },
+  {
+    path: '/questions',
+    name: 'Questions',
+    component: () => import('../views/Questions.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/questions/new',
+    name: 'QuestionNew',
+    component: () => import('../views/QuestionEdit.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/questions/:id/edit',
+    name: 'QuestionEdit',
+    component: () => import('../views/QuestionEdit.vue'),
+    meta: { requiresAuth: true },
+  },
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+
+// ── 路由守卫 ──
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token');
+
+  if (to.meta.requiresAuth && !token) {
+    next('/login');
+  } else if (to.meta.guest && token) {
+    next('/questions');
+  } else {
+    next();
+  }
+});
+
+export default router;

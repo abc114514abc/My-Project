@@ -39,6 +39,7 @@ http.interceptors.response.use(
 export default http;
 
 // 认证相关接口封装，供页面直接调用，避免在组件里重复写请求逻辑。
+//使用axios向后端发送请求和data数据
 export const authAPI = {
   register: (data) => http.post('/auth/register', data),
   login: (data) => http.post('/auth/login', data),

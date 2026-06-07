@@ -59,7 +59,7 @@ async function handleLogin() {
   loading.value = true;
   try {
     await store.login(form.username, form.password);
-    router.push('/dashboard');
+    router.push('/questions');
   } catch (err) {
     errorMsg.value = err.message;
   } finally {
@@ -67,3 +67,4 @@ async function handleLogin() {
   }
 }
 </script>
+
