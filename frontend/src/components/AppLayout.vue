@@ -1,5 +1,6 @@
 <template>
   <div class="layout">
+    
     <header class="header">
       <div class="header-inner">
         <h1 class="logo" @click="$router.push('/questions')">📚 面试知识库</h1>
