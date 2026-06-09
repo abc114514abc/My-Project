@@ -26,8 +26,13 @@ const QUESTION_FIELDS = `
 // ─────────────────────────────────────
 
 function buildWhereClause(userId, filters = {}) {
-  const conditions = ['q.user_id = ?'];
-  const params = [userId];
+  const conditions = [];
+  const params = [];
+
+  if (userId != null) {
+    conditions.push('q.user_id = ?');
+    params.push(userId);
+  }
 
   if (filters.difficulty) {
     conditions.push('q.difficulty = ?');
@@ -45,7 +50,8 @@ function buildWhereClause(userId, filters = {}) {
     params.push(`+${filters.keyword}*`);
   }
 
-  return { where: conditions.join(' AND '), params };
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  return { whereClause, params };
 }
 
 // ─────────────────────────────────────
@@ -109,7 +115,7 @@ const Question = {
     const pageSize = Math.min(100, Math.max(1, Number(filters.pageSize) || 20));
     const offset = (page - 1) * pageSize;
 
-    const { where, params } = buildWhereClause(userId, filters);
+    const { whereClause, params } = buildWhereClause(userId, filters);
 
     // 计数
     const [countRows] = await pool.execute(
@@ -117,18 +123,18 @@ const Question = {
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
-       WHERE ${where}`,
-      params
-    );
-    const total = countRows[0].total;
+       ${whereClause}`,
+             params
+           );
+           const total = countRows[0].total;
 
-    // 数据
-    const [rows] = await pool.execute(
-      `SELECT ${QUESTION_FIELDS}, ${TAG_SELECT}
-       FROM questions q
-       LEFT JOIN question_tags qt ON q.id = qt.question_id
-       LEFT JOIN tags t ON qt.tag_id = t.id
-       WHERE ${where}
+           // 数据
+           const [rows] = await pool.execute(
+             `SELECT ${QUESTION_FIELDS}, ${TAG_SELECT}
+              FROM questions q
+              LEFT JOIN question_tags qt ON q.id = qt.question_id
+              LEFT JOIN tags t ON qt.tag_id = t.id
+              ${whereClause}
        GROUP BY q.id
        ORDER BY q.updated_at DESC
        LIMIT ? OFFSET ?`,
@@ -141,16 +147,24 @@ const Question = {
     };
   },
 
-  // 单个题目详情（含标签）
+    // 单个题目详情（含标签）
   async findById(id, userId) {
+    const conditions = ['q.id = ?'];
+    const params = [id];
+
+    if (userId != null) {
+      conditions.push('q.user_id = ?');
+      params.push(userId);
+    }
+
     const [rows] = await pool.execute(
       `SELECT ${QUESTION_FIELDS}, ${TAG_SELECT}
        FROM questions q
        LEFT JOIN question_tags qt ON q.id = qt.question_id
        LEFT JOIN tags t ON qt.tag_id = t.id
-       WHERE q.id = ? AND q.user_id = ?
+       WHERE ${conditions.join(' AND ')}
        GROUP BY q.id`,
-      [id, userId]
+      params
     );
     return rows.length > 0 ? parseTags(rows[0]) : null;
   },

@@ -1,23 +1,30 @@
 <template>
   <article :class="['card', { 'card--expanded': expanded }]">
-    <!-- 头部（可点击展开） -->
-    <header class="card__header" @click="expanded = !expanded">
+    <!-- 头部 -->
+    <header class="card__header">
       <div class="card__title-row">
         <span :class="['badge', 'badge--' + question.difficulty]">
           {{ difficultyLabel }}
         </span>
-        <h3 class="card__title">{{ question.title }}</h3>
-        <span v-if="question.is_mistake" class="badge badge--mistake">错题</span>
+        <router-link
+          :to="'/questions/' + question.id"
+          class="card__title"
+        >
+          {{ question.title }}
+        </router-link>
+        <span v-if="question.is_mistake && store.isLoggedIn" class="badge badge--mistake">收藏</span>
       </div>
 
       <div class="card__meta">
         <span v-if="question.source" class="card__source">📎 {{ question.source }}</span>
         <time class="card__time">{{ formatDate(question.updated_at) }}</time>
-        <span class="card__chevron">{{ expanded ? '▲' : '▼' }}</span>
+        <button type="button" class="card__chevron-btn" @click="expanded = !expanded">
+          {{ expanded ? '▲' : '▼' }}
+        </button>
       </div>
     </header>
 
-    <!-- 展开内容 -->
+    <!-- 展开区域 -->
     <section v-show="expanded" class="card__body" @click.stop>
       <!-- 标签行 -->
       <div class="card__tags">
@@ -29,14 +36,36 @@
         </span>
       </div>
 
-      <!-- Markdown 渲染预览 -->
+      <!-- Markdown 预览 -->
       <div class="card__content" v-html="htmlPreview"></div>
 
-      <!-- 操作按钮 -->
+            <!-- 操作按钮 -->
       <footer class="card__actions">
-        <button type="button" class="btn-action btn-action--danger" @click.stop="handleDelete">
-          🗑 删除
-        </button>
+        <router-link
+          :to="'/questions/' + question.id"
+          class="btn-action"
+        >
+          📋 查看详情
+        </router-link>
+        <template v-if="store.isLoggedIn">
+          <router-link
+            :to="'/questions/' + question.id + '/edit'"
+            class="btn-action btn-action--primary"
+          >
+            ✏️ 编辑
+          </router-link>
+          <button
+            type="button"
+            class="btn-action"
+            :class="{ 'btn-action--mistake-active': question.is_mistake }"
+            @click.stop="handleToggleMistake"
+          >
+            {{ question.is_mistake ? '✅ 取消收藏' : '❌ 标记收藏' }}
+          </button>
+          <button type="button" class="btn-action btn-action--danger" @click.stop="handleDelete">
+            🗑 删除
+          </button>
+        </template>
       </footer>
     </section>
   </article>
@@ -45,6 +74,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { markdownToHtml } from '../utils/markdown';
+import { questionAPI } from '../api/question';
+import { useUserStore } from '../stores/user';
+
+const store = useUserStore();
 
 const props = defineProps({
   question: {
@@ -53,7 +86,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['delete']);
+const emit = defineEmits(['delete', 'refresh']);
 
 const expanded = ref(false);
 
@@ -71,6 +104,15 @@ const htmlPreview = computed(() => {
 function formatDate(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('zh-CN');
+}
+
+async function handleToggleMistake() {
+  try {
+    await questionAPI.toggleMistake(props.question.id);
+    emit('refresh');
+  } catch (err) {
+    alert(err.message || '操作失败');
+  }
 }
 
 function handleDelete() {
@@ -100,7 +142,6 @@ function handleDelete() {
 
 /* 头部 */
 .card__header {
-  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -118,6 +159,12 @@ function handleDelete() {
   font-size: 16px;
   font-weight: 600;
   color: #1a1a2e;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.card__title:hover {
+  color: #667eea;
 }
 
 .card__meta {
@@ -128,8 +175,19 @@ function handleDelete() {
   color: #999;
 }
 
-.card__chevron {
+.card__chevron-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 10px;
+  padding: 2px 6px;
+  color: #999;
+}
+
+.card__chevron-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
 }
 
 /* 展开区域 */
@@ -195,20 +253,45 @@ function handleDelete() {
   margin-top: 14px;
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn-action {
-  padding: 6px 16px;
-  border: 1px solid #ddd;
+  padding: 7px 16px;
+  border: 1px solid #e0e0e0;
   border-radius: 6px;
   background: #fff;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
-  color: #666;
+  color: #555;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-action:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.btn-action--primary {
+  background: #667eea;
+  color: #fff;
+  border-color: #667eea;
+}
+
+.btn-action--primary:hover {
+  opacity: 0.85;
+  color: #fff;
 }
 
 .btn-action--danger:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.btn-action--mistake-active {
+  background: #fff0f0;
   border-color: #e74c3c;
   color: #e74c3c;
 }

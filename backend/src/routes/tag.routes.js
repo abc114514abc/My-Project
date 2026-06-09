@@ -4,11 +4,13 @@ const { validate } = require('../middleware/validate');
 const { z } = require('zod');
 const tagController = require('../controllers/tag.controller');
 
-// 所有路由都需要登录
-router.use(auth);
+
 
 // GET    /api/tags      — 全部标签
 router.get('/', tagController.list);
+
+// 所有路由都需要登录
+router.use(auth);
 
 // POST   /api/tags      — 创建标签
 router.post(

@@ -43,12 +43,30 @@ function validate(schema) {
           case 'too_big':
             return `${field} 长度不能超过 ${issue.maximum}`;
           case 'invalid_type':
-            if (issue.received === 'undefined') return `${field} 不能为空`;
             return `${field} 格式不正确`;
-          case 'invalid_enum_value':
-            return `${field} 只能为 ${issue.options.join(' / ')}`;
+          case 'invalid_value':
+            return `${field} 只能为 ${issue.values.join(' / ')}`;
+          case 'invalid_union': {
+            // 从子错误中提取更有意义的信息
+            const first = issue.errors?.[0]?.[0];
+            if (first) {
+              switch (first.code) {
+                case 'invalid_value':
+                  return `${field} 只能为 ${first.values.join(' / ')}`;
+                case 'invalid_type':
+                  return `${field} 格式不正确`;
+                case 'too_small':
+                  return first.minimum === 1
+                    ? `${field} 不能为空`
+                    : `${field} 长度不能少于 ${first.minimum}`;
+                case 'too_big':
+                  return `${field} 长度不能超过 ${first.maximum}`;
+              }
+            }
+            return `${field} 格式不正确`;
+          }
           default:
-            return issue.message;
+            return `${field} 格式不正确`;
         }
       });
       return res.status(400).json({ code: 400, message: messages.join('; '), data: null });

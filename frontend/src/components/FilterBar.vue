@@ -30,13 +30,13 @@
         </option>
       </select>
 
-      <!-- 仅看错题开关 -->
+      <!-- 仅看收藏开关 -->
       <button
         type="button"
         :class="['toggle-btn', { active: isMistake }]"
         @click="toggleMistake"
       >
-        ❌ 仅看错题
+        ❌ 仅看收藏
       </button>
     </div>
   </div>
@@ -83,6 +83,7 @@ function emitChange() {
 }
 
 onMounted(async () => {
+  console.log('💥💥 FilterBar 真的在当前页面挂载渲染了！当前路由是：', window.location.pathname);
   try {
     const data = await tagAPI.getList();
     tags.value = data || [];
@@ -91,6 +92,8 @@ onMounted(async () => {
     tags.value = [];
   }
 });
+
+
 </script>
 
 <style scoped>
@@ -175,7 +178,7 @@ select:focus {
   border-color: #667eea;
 }
 
-/* 错题开关 */
+/* 收藏开关 */
 .toggle-btn {
   padding: 10px 16px;
   border: 1px solid #e0e0e0;

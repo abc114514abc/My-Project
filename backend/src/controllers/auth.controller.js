@@ -51,17 +51,17 @@ const authController = {
       if (!username || !password) {
         return res.status(400).json(fail('用户名和密码不能为空'));
       }
-
+      //检测有误对应账号
       const user = await User.findByUsername(username);
       if (!user) {
         return res.status(400).json(fail('用户名或密码错误'));
       }
-
+      //bcrypt验证数据库的密文和登录时输入的明文是否对应
       const isMatch = await bcrypt.compare(password, user.password_hash);
       if (!isMatch) {
         return res.status(400).json(fail('用户名或密码错误'));
       }
-
+      //以上都没问题签发token返回
       const token = jwt.sign(
         { id: user.id, username: user.username },
         process.env.JWT_SECRET,

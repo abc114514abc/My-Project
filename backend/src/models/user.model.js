@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 
+//业务逻辑全用参数化查询(数据库预处理)
 const User = {
   // 按用户名查找
   async findByUsername(username) {

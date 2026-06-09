@@ -4,11 +4,14 @@ const Tag = {
   // 全部标签
   async findAll() {
     const [rows] = await pool.execute(
-      `SELECT t.id, t.name, COUNT(qt.question_id) AS question_count
-       FROM tags t
-       LEFT JOIN question_tags qt ON t.id = qt.tag_id
-       GROUP BY t.id
-       ORDER BY t.name`
+      //COUNT()是计数器，
+      `SELECT tags.id, 
+      tags.name, 
+      COUNT(question_tags.question_id) AS question_count
+      FROM tags
+      LEFT JOIN question_tags ON tags.id = question_tags.tag_id
+      GROUP BY tags.id
+      ORDER BY tags.name`
     );
     return rows;
   },
