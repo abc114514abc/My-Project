@@ -1,0 +1,47 @@
+:root {
+  /* 颜色 */
+  --color-primary: #5b6ee8;
+  --color-primary-dark: #6b5bb5;
+  --color-primary-light: #eef0ff;
+  --color-bg: #f4f6f9;
+  --color-surface: #ffffff;
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-border: #e5e7eb;
+  --color-border-hover: #c7d2fe;
+
+  --color-easy: #2e7d32;
+  --color-easy-bg: #e8f5e9;
+  --color-medium: #e65100;
+  --color-medium-bg: #fff3e0;
+  --color-hard: #c62828;
+  --color-hard-bg: #ffebee;
+  --color-danger: #dc3545;
+  --color-warning: #b8860b;
+  --color-warning-bg: #fffbe6;
+
+  /* 渐变 */
+  --gradient-primary: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* 字体 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  --font-mono: 'Menlo', 'Consolas', monospace;
+
+  /* 布局 */
+  --max-width: 1000px;
+  --navbar-height: 56px;
+  --spacing-page: 24px;
+}

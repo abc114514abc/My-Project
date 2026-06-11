@@ -1,25 +1,41 @@
 <template>
   <AppLayout>
     <div class="page">
-      <header class="page__header">
-        <h2>📚 题目列表</h2>
-        <router-link to="/questions/new" class="btn-add">+ 新增题目</router-link>
+      <header class="page-header">
+        <div>
+          <h2>题目列表</h2>
+          <p v-if="!loading && pagination.total > 0" class="page-header__meta">
+            共 {{ pagination.total }} 题
+          </p>
+        </div>
+        <router-link v-if="store.isLoggedIn" to="/questions/new" class="btn btn-primary">+ 新增题目</router-link>
       </header>
 
-      <FilterBar @filter-change="handleFilterChange" />
+      <FilterBar
+        :initial-keyword="initialFilters.keyword"
+        :initial-difficulty="initialFilters.difficulty"
+        :initial-tag-id="initialFilters.tagId"
+        @filter-change="handleFilterChange"
+      />
 
       <div v-if="loading" class="state">
-        <p>加载中...</p>
+        <div class="spinner"></div>
+        <p>加载中<span class="loading-dots"></span></p>
       </div>
 
       <div v-else-if="errorMsg" class="state state--error">
         <p>{{ errorMsg }}</p>
-        <button class="btn-retry" @click="fetchList">重试</button>
+        <div class="state__actions">
+          <button class="btn btn-danger" @click="fetchList">重试</button>
+        </div>
       </div>
 
       <div v-else-if="list.length === 0" class="state">
         <p class="state__icon">📭</p>
-        <p>还没有题目，点击右上角「新增题目」开始吧</p>
+        <p>{{ emptyMessage }}</p>
+        <div v-if="store.isLoggedIn" class="state__actions">
+          <router-link to="/questions/new" class="btn btn-primary">+ 新增题目</router-link>
+        </div>
       </div>
 
       <template v-else>
@@ -43,12 +59,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import AppLayout from '../components/AppLayout.vue';
 import FilterBar from '../components/FilterBar.vue';
 import QuestionCard from '../components/QuestionCard.vue';
 import AppPagination from '../components/AppPagination.vue';
 import { questionAPI } from '../api/question';
+import { useUserStore } from '../stores/user';
+
+const route = useRoute();
+const router = useRouter();
+const store = useUserStore();
 
 const list = ref([]);
 const pagination = reactive({
@@ -60,7 +82,27 @@ const pagination = reactive({
 const loading = ref(false);
 const errorMsg = ref('');
 
+const initialFilters = computed(() => ({
+  keyword: route.query.keyword || '',
+  difficulty: route.query.difficulty || '',
+  tagId: route.query.tagId || '',
+}));
+
+const emptyMessage = computed(() => {
+  if (currentFilters.keyword) return '没有找到匹配的题目，换个关键词试试';
+  if (currentFilters.difficulty || currentFilters.tagId) return '当前筛选条件下没有题目';
+  return store.isLoggedIn ? '还没有题目，点击上方「新增题目」开始吧' : '还没有题目';
+});
+
 let currentFilters = {};
+
+function syncQueryToUrl() {
+  const query = {};
+  if (currentFilters.keyword) query.keyword = currentFilters.keyword;
+  if (currentFilters.difficulty) query.difficulty = currentFilters.difficulty;
+  if (currentFilters.tagId) query.tagId = currentFilters.tagId;
+  router.replace({ query });
+}
 
 async function fetchList() {
   loading.value = true;
@@ -92,6 +134,7 @@ async function fetchList() {
 function handleFilterChange(filters) {
   currentFilters = { ...filters };
   pagination.page = 1;
+  syncQueryToUrl();
   fetchList();
 }
 
@@ -111,70 +154,12 @@ async function handleDelete(id) {
 }
 
 onMounted(() => {
+  currentFilters = {
+    keyword: route.query.keyword || '',
+    difficulty: route.query.difficulty || '',
+    tagId: route.query.tagId || '',
+    isMistake: false,
+  };
   fetchList();
 });
 </script>
-
-<style scoped>
-.page {
-  
-  /* 由 AppLayout 包裹 */
-}
-
-.page__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.page__header h2 {
-  font-size: 22px;
-  color: #1a1a2e;
-}
-
-.btn-add {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: opacity 0.2s;
-}
-
-.btn-add:hover {
-  opacity: 0.9;
-}
-
-.state {
-  text-align: center;
-  padding: 60px 20px;
-  background: #fff;
-  border-radius: 12px;
-  color: #999;
-}
-
-.state__icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.state--error {
-  color: #e74c3c;
-}
-
-.btn-retry {
-  margin-top: 12px;
-  padding: 8px 20px;
-  border: 1px solid #e74c3c;
-  border-radius: 8px;
-  background: #fff;
-  color: #e74c3c;
-  cursor: pointer;
-}
-</style>

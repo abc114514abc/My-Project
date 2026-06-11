@@ -1,12 +1,17 @@
 <template>
   <AppLayout>
     <div class="random-page">
-      <div v-if="loading" class="state">抽题中...</div>
+      <div v-if="loading" class="state">
+        <div class="spinner"></div>
+        <p>正在随机抽题<span class="loading-dots"></span></p>
+      </div>
 
       <div v-else-if="errorMsg" class="state state--error">
         <p>{{ errorMsg }}</p>
-        <button class="btn-retry" @click="pickRandom">再抽一次</button>
-        <router-link to="/questions" class="back-link">浏览题库</router-link>
+        <div class="state__actions">
+          <button class="btn btn-primary" @click="pickRandom">再抽一次</button>
+          <router-link to="/questions" class="btn btn-outline">浏览题库</router-link>
+        </div>
       </div>
     </div>
   </AppLayout>
@@ -46,43 +51,3 @@ async function pickRandom() {
 
 onMounted(pickRandom);
 </script>
-
-<style scoped>
-.random-page {
-  /* 容器 */
-}
-
-.state {
-  text-align: center;
-  padding: 80px 20px;
-  background: #fff;
-  border-radius: 12px;
-  color: #999;
-  font-size: 16px;
-}
-
-.state--error {
-  color: #e74c3c;
-}
-
-.btn-retry {
-  margin-top: 14px;
-  padding: 10px 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-block;
-}
-
-.back-link {
-  display: inline-block;
-  margin-top: 12px;
-  color: #667eea;
-  text-decoration: none;
-  font-size: 14px;
-}
-</style>

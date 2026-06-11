@@ -1,69 +1,54 @@
 <template>
-  <article :class="['card', { 'card--expanded': expanded }]">
-    <!-- 头部 -->
-    <header class="card__header">
-      <div class="card__title-row">
+  <article :class="['question-card', { 'question-card--expanded': expanded }]">
+    <header class="question-card__header">
+      <div class="question-card__title-row">
         <span :class="['badge', 'badge--' + question.difficulty]">
-          {{ difficultyLabel }}
+          {{ difficultyLabel[question.difficulty] || '未知' }}
         </span>
-        <router-link
-          :to="'/questions/' + question.id"
-          class="card__title"
-        >
+        <router-link :to="'/questions/' + question.id" class="question-card__title">
           {{ question.title }}
         </router-link>
-        <span v-if="question.is_mistake && store.isLoggedIn" class="badge badge--mistake">收藏</span>
+        <span v-if="question.is_mistake && store.isLoggedIn" class="badge badge--mistake">已收藏</span>
       </div>
 
-      <div class="card__meta">
-        <span v-if="question.source" class="card__source">📎 {{ question.source }}</span>
-        <time class="card__time">{{ formatDate(question.updated_at) }}</time>
-        <button type="button" class="card__chevron-btn" @click="expanded = !expanded">
-          {{ expanded ? '▲' : '▼' }}
+      <div class="question-card__meta">
+        <span v-if="question.source" class="question-card__source">{{ question.source }}</span>
+        <time>{{ formatDate(question.updated_at) }}</time>
+        <button type="button" class="question-card__toggle" @click="expanded = !expanded">
+          {{ expanded ? '收起' : '展开' }}
         </button>
       </div>
     </header>
 
-    <!-- 展开区域 -->
-    <section v-show="expanded" class="card__body" @click.stop>
-      <!-- 标签行 -->
-      <div class="card__tags">
-        <span v-if="!question.tags || question.tags.length === 0" class="card__tags-empty">
+    <section v-show="expanded" class="question-card__body" @click.stop>
+      <div class="question-card__tags">
+        <span v-if="!question.tags || question.tags.length === 0" class="question-card__tags-empty">
           暂无标签
         </span>
-        <span v-for="tag in question.tags" :key="tag.id" class="tag">
-          {{ tag.name }}
-        </span>
+        <span v-for="tag in question.tags" :key="tag.id" class="tag">{{ tag.name }}</span>
       </div>
 
-      <!-- Markdown 预览 -->
-      <div class="card__content" v-html="htmlPreview"></div>
+      <div class="question-card__content markdown-body" v-html="htmlPreview"></div>
 
-            <!-- 操作按钮 -->
-      <footer class="card__actions">
-        <router-link
-          :to="'/questions/' + question.id"
-          class="btn-action"
-        >
-          📋 查看详情
-        </router-link>
+      <footer class="question-card__actions">
+        <router-link :to="'/questions/' + question.id" class="btn-action">查看详情</router-link>
         <template v-if="store.isLoggedIn">
           <router-link
             :to="'/questions/' + question.id + '/edit'"
             class="btn-action btn-action--primary"
           >
-            ✏️ 编辑
+            编辑
           </router-link>
           <button
             type="button"
             class="btn-action"
-            :class="{ 'btn-action--mistake-active': question.is_mistake }"
+            :class="{ 'btn-action--active': question.is_mistake }"
             @click.stop="handleToggleMistake"
           >
-            {{ question.is_mistake ? '✅ 取消收藏' : '❌ 标记收藏' }}
+            {{ question.is_mistake ? '取消收藏' : '收藏' }}
           </button>
           <button type="button" class="btn-action btn-action--danger" @click.stop="handleDelete">
-            🗑 删除
+            删除
           </button>
         </template>
       </footer>
@@ -76,35 +61,23 @@ import { ref, computed } from 'vue';
 import { markdownToHtml } from '../utils/markdown';
 import { questionAPI } from '../api/question';
 import { useUserStore } from '../stores/user';
+import { formatDate, difficultyLabel } from '../utils/format';
 
 const store = useUserStore();
 
 const props = defineProps({
-  question: {
-    type: Object,
-    required: true,
-  },
+  question: { type: Object, required: true },
 });
 
 const emit = defineEmits(['delete', 'refresh']);
 
 const expanded = ref(false);
 
-const difficultyLabel = computed(() => {
-  const map = { easy: '简单', medium: '中等', hard: '困难' };
-  return map[props.question.difficulty] || '未知';
-});
-
 const htmlPreview = computed(() => {
   const text = props.question.content || '';
   const preview = text.length > 300 ? text.slice(0, 300) + '…' : text;
   return markdownToHtml(preview);
 });
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('zh-CN');
-}
 
 async function handleToggleMistake() {
   try {
@@ -123,25 +96,24 @@ function handleDelete() {
 </script>
 
 <style scoped>
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 18px 22px;
+.question-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
   margin-bottom: 10px;
-  border: 1px solid #eee;
+  border: 1px solid var(--color-border);
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
-.card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+.question-card:hover {
+  box-shadow: var(--shadow-sm);
 }
 
-.card--expanded {
-  border-color: #667eea;
+.question-card--expanded {
+  border-color: var(--color-primary);
 }
 
-/* 头部 */
-.card__header {
+.question-card__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -149,181 +121,79 @@ function handleDelete() {
   gap: 8px;
 }
 
-.card__title-row {
+.question-card__title-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
-.card__title {
+.question-card__title {
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a2e;
+  color: var(--color-text);
   text-decoration: none;
   transition: color 0.15s;
 }
 
-.card__title:hover {
-  color: #667eea;
+.question-card__title:hover {
+  color: var(--color-primary);
 }
 
-.card__meta {
+.question-card__meta {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 13px;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
-.card__chevron-btn {
+.question-card__source {
+  color: var(--color-text-secondary);
+}
+
+.question-card__toggle {
   background: none;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 10px;
-  padding: 2px 6px;
-  color: #999;
+  font-size: 12px;
+  padding: 3px 10px;
+  color: var(--color-text-muted);
+  font-family: inherit;
 }
 
-.card__chevron-btn:hover {
-  border-color: #667eea;
-  color: #667eea;
+.question-card__toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
-/* 展开区域 */
-.card__body {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #f2f2f2;
+.question-card__body {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
-.card__tags {
+.question-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
-.card__tags-empty {
+.question-card__tags-empty {
   font-size: 13px;
-  color: #ccc;
+  color: var(--color-text-muted);
 }
 
-.tag {
-  font-size: 12px;
-  background: #eef0ff;
-  color: #667eea;
-  padding: 4px 12px;
-  border-radius: 20px;
-}
-
-/* Markdown 内容 */
-.card__content {
+.question-card__content {
   font-size: 14px;
-  line-height: 1.75;
-  color: #444;
 }
 
-.card__content :deep(code) {
-  background: #f5f5f5;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.card__content :deep(pre) {
-  background: #2d2d2d;
-  color: #f8f8f2;
-  padding: 14px;
-  border-radius: 8px;
-  overflow-x: auto;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.card__content :deep(h2),
-.card__content :deep(h3),
-.card__content :deep(h4) {
-  margin: 10px 0 6px;
-  color: #1a1a2e;
-}
-
-/* 操作按钮 */
-.card__actions {
+.question-card__actions {
   margin-top: 14px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.btn-action {
-  padding: 7px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
-  color: #555;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-action:hover {
-  border-color: #667eea;
-  color: #667eea;
-}
-
-.btn-action--primary {
-  background: #667eea;
-  color: #fff;
-  border-color: #667eea;
-}
-
-.btn-action--primary:hover {
-  opacity: 0.85;
-  color: #fff;
-}
-
-.btn-action--danger:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-.btn-action--mistake-active {
-  background: #fff0f0;
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
-
-/* 徽标 */
-.badge {
-  font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-weight: 500;
-}
-
-.badge--easy {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.badge--medium {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.badge--hard {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.badge--mistake {
-  background: #c62828;
-  color: #fff;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
 }
 </style>
