@@ -5,9 +5,22 @@
         <span :class="['badge', 'badge--' + question.difficulty]">
           {{ difficultyLabel[question.difficulty] || '未知' }}
         </span>
-        <router-link :to="'/questions/' + question.id" class="question-card__title">
-          {{ question.title }}
-        </router-link>
+        <div class="question-card__text-wrap">
+          <router-link :to="'/questions/' + question.id" class="question-card__title">
+            {{ question.title }}
+          </router-link>
+          <div class="question-card__subline-wrap">
+            <p class="question-card__subline">
+              <span v-if="question.tags && question.tags.length" class="question-card__tag-chips">
+                <span v-for="tag in question.tags.slice(0, 3)" :key="tag.id" class="question-card__tag-chip">{{ tag.name }}</span>
+              </span>
+              <span v-else class="question-card__tag-chips question-card__tag-chips--muted">
+                <span class="question-card__tag-chip">暂无标签</span>
+              </span>
+            </p>
+            <span v-if="question.source" class="question-card__source-inline">{{ question.source }}</span>
+          </div>
+        </div>
         <span v-if="question.is_mistake && store.isLoggedIn" class="badge badge--mistake">已收藏</span>
       </div>
 
@@ -21,13 +34,6 @@
     </header>
 
     <section v-show="expanded" class="question-card__body" @click.stop>
-      <div class="question-card__tags">
-        <span v-if="!question.tags || question.tags.length === 0" class="question-card__tags-empty">
-          暂无标签
-        </span>
-        <span v-for="tag in question.tags" :key="tag.id" class="tag">{{ tag.name }}</span>
-      </div>
-
       <div class="question-card__content markdown-body" v-html="htmlPreview"></div>
 
       <footer class="question-card__actions">
@@ -124,20 +130,76 @@ function handleDelete() {
 .question-card__title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
+  flex: 1;
+}
+
+.question-card__text-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  padding-right: 8px;
 }
 
 .question-card__title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--color-text);
   text-decoration: none;
   transition: color 0.15s;
+  line-height: 1.4;
 }
 
-.question-card__title:hover {
-  color: var(--color-primary);
+.question-card__subline-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  width: auto;
+  padding-top: 6px;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+  max-width: 50%;
+}
+
+.question-card__subline {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.question-card__tag-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.question-card__tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.question-card__tag-chips--muted .question-card__tag-chip {
+  opacity: 0.85;
+}
+
+.question-card__source-inline {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .question-card__meta {
@@ -146,6 +208,7 @@ function handleDelete() {
   gap: 12px;
   font-size: 13px;
   color: var(--color-text-muted);
+  margin-left: 8px;
 }
 
 .question-card__source {
